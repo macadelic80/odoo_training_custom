@@ -3,7 +3,7 @@
   <record id="estate_property_views" model="ir.actions.act_window">
     <field name="name">Properties</field>
     <field name="res_model">estate.property</field>
-    <field name="view_mode">tree,form</field>
+    <field name="view_mode">tree,form,kanban</field>
   </record>
 
 
@@ -32,6 +32,7 @@
         <header>
           <button name="action_sold" type="object" string="Sold"/>
           <button name="action_cancel" type="object" string="Cancel"/>
+          <field name="state" widget="statusbar" statusbar_visible="new,offer_received,offer_accepted,sold"/>
         </header>
         <sheet>
           <div class="oe_button_box" name="button_box">
@@ -47,7 +48,6 @@
           <field name="tags_id" widget="many2many_tags"/>
           <group>
             <group name="left_main_group">
-              <field name="state" string="Status"/>
               <field name="property_type_id"/>
               <field name="postcode"/>
               <field name="date_availability" string="Available From"/>
@@ -62,7 +62,6 @@
             <page string="Description">
               <group>
                 <field name="description"/>
-                <field name="state"/>
                 <field name="bedrooms"/>
                 <field name="living_area" string="Living Area (sqm)"/>
                 <field name="facades"/>
@@ -104,6 +103,49 @@
         <field name="selling_price"/>
         <field name="date_availability" string="Available From"/>
       </tree>
+    </field>
+  </record>
+
+
+  <record id="estate_property_view_kanban" model="ir.ui.view">
+    <field name="name">estate.property.view.kanban</field>
+    <field name="model">estate.property</field>
+    <field name="arch" type="xml">
+      <kanban default_group_by="property_type_id">
+        <templates>
+          <t t-name="kanban-box">
+
+            <div class="oe_kanban_global_click">
+              <div>
+                <strong class="o_kanban_record_title">
+                  <span>
+                    <field name="name"/>
+                  </span>
+                </strong>
+              </div>
+
+              <div>
+                <span>
+                  Expected Price: <field name="expected_price"/>
+                </span>
+              </div>
+              <div t-if="record.best_price.raw_value > 0">
+                <span >
+                  Best Offer: <field name="best_price"/>
+                </span>
+              </div>
+              <div t-if="record.selling_price.raw_value > 0">
+                <span>
+                  Selling Price: <field name="selling_price"/>
+                </span>
+              </div>
+              <div>
+                <field name="tags_id"/>
+              </div>
+            </div>
+          </t>
+        </templates>
+      </kanban>
     </field>
   </record>
 </odoo>

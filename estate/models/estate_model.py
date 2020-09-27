@@ -1,9 +1,11 @@
 from odoo import models, fields, _, api
 from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_is_zero, float_compare
 
 class EstateModel(models.Model):
     _name = "estate.property"
     _description = "Estate property"
+    _order = "id desc"
 
     name = fields.Char(required=True)
     description = fields.Text()
@@ -24,6 +26,7 @@ class EstateModel(models.Model):
     )
     active = fields.Boolean(default=True)
     state = fields.Selection(
+        string='Status',
         copy=False,
         default='new',
         selection=[('new', 'New'), ('offer', 'Offer'), ('offer_received', 'Offer Received'), ('offer_accepted', 'Offer Accepted'), ('sold', 'Sold'), ('canceled', 'Canceled')]
@@ -67,3 +70,21 @@ class EstateModel(models.Model):
             else:
                 raise ValidationError(_('Solded properties cannot be cancel'))
         return True
+
+    @api.onchange("garden")
+    def _onchange_garden(self):
+        self.garden_area = 10 if self.garden else None
+        self.garden_orientation = 'north' if self.garden else None
+
+    @api.constrains("selling_price")
+    def _constrains_selling_price(self):
+        for record in self:
+            is_less_than_90 = float_compare(90.0, (100 * float(record.selling_price) / float(record.expected_price)), precision_digits=1)
+            print("less than {}", is_less_than_90)
+            if not float_is_zero(record.selling_price, precision_digits=2) and is_less_than_90:
+                raise ValidationError("Blabla 90%")
+
+    _sql_constraints = [
+        ('check_expected_price', 'CHECK(expected_price > 0)', 'A property expected price must be strictly positive.'),
+        ('check_selling_price', 'CHECK(selling_price >= 0)', 'A property selling price must be positive.'),
+    ]

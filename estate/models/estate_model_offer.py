@@ -4,6 +4,7 @@ from odoo import models, fields, api
 class EstateOfferModel(models.Model):
     _name = "estate.property.offer"
     _description = "Estate property offer"
+    _order = "price desc"
 
     price = fields.Float(default=0.0)
     status = fields.Selection(
@@ -37,3 +38,7 @@ class EstateOfferModel(models.Model):
         for record in self:
             record.validity = fields.Date.subtract(record.date_deadline, days=fields.Date.today().day).day
             # print("ICIII {} - {}".format(record.date_deadline, fields.Date.today()))
+
+    _sql_constraints = [
+        ('check_offer_price', 'CHECK(price > 0)', 'An offer price must be strictly positive.')
+    ]
