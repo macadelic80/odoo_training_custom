@@ -53,6 +53,7 @@ class EstateModel(models.Model):
                 if max < o.price:
                     max = o.price
             r.best_price = max
+            # r.state = "offer_received" if max > 0.0 and r.state == "new" else r.state
         return True
 
     def action_sold(self):
@@ -79,10 +80,17 @@ class EstateModel(models.Model):
     @api.constrains("selling_price")
     def _constrains_selling_price(self):
         for record in self:
-            is_less_than_90 = float_compare(90.0, (100 * float(record.selling_price) / float(record.expected_price)), precision_digits=1)
+            is_less_than_90 = float_compare(90.0, (100 * float(record.selling_price) / float(record.expected_price)), precision_digits=1) > 0
             print("less than {}", is_less_than_90)
             if not float_is_zero(record.selling_price, precision_digits=2) and is_less_than_90:
-                raise ValidationError("Blabla 90%")
+                raise ValidationError("c pa superieur a 90% dsl")
+
+    def unlink(self):
+        if(self.state in {'new', 'canceled'}):
+            return super(EstateModel, self).unlink()
+        else:
+            raise UserError(_('Deleting of property with this state is not allowed.'))
+        return
 
     _sql_constraints = [
         ('check_expected_price', 'CHECK(expected_price > 0)', 'A property expected price must be strictly positive.'),

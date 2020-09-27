@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<odoo>
+    <record id="estate_users_views" model="ir.actions.act_window">
+        <field name="name">Properties userss</field>
+        <field name="res_model">estate.property.users</field>
+        <field name="view_mode">tree,form</field>
+    </record>
+
+    <record id="estate_users_tree" model="ir.ui.view">
+        <field name="name">estate.property.users.view.tree</field>
+        <field name="model">estate.property.users</field>
+        <field name="arch" type="xml">
+            <tree string="Channel">
+                <field name="property_ids"/>
+            </tree>
+        </field>
+    </record>
+</odoo>

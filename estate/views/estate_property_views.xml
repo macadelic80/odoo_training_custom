@@ -3,6 +3,7 @@
   <record id="estate_property_views" model="ir.actions.act_window">
     <field name="name">Properties</field>
     <field name="res_model">estate.property</field>
+    <field name="context">{'search_default_available': True}</field>
     <field name="view_mode">tree,form,kanban</field>
   </record>
 
@@ -15,12 +16,13 @@
       <search string="Delivery Carrier">
         <field name="name" string="Carrier" />
         <separator/>
-        <filter string="Available Properties" name='inactive' domain="['|', ('state', '=', 'new'), ('state', '=', 'offer_received')]"/>
+        <filter string="Available Properties" name='available' domain="['|', ('state', '=', 'new'), ('state', '=', 'offer_received')]"/>
+        <field name="living_area" 
+           filter_domain="[('living_area', '>=', self)]"/>
         <group expand="1" string="Group By 2">
           <filter string="Postcode" name="provider" context="{'group_by':'postcode'}"/>
         </group>
       </search>
-
     </field>
   </record>
 
@@ -30,8 +32,8 @@
     <field name="arch" type="xml">
       <form string="Lost Reason">
         <header>
-          <button name="action_sold" type="object" string="Sold"/>
-          <button name="action_cancel" type="object" string="Cancel"/>
+          <button name="action_sold" states="new,offer_received,offer_accepted" type="object" string="Sold"/>
+          <button name="action_cancel" states="new,offer_received,offer_accepted" type="object" string="Cancel"/>
           <field name="state" widget="statusbar" statusbar_visible="new,offer_received,offer_accepted,sold"/>
         </header>
         <sheet>
@@ -45,10 +47,10 @@
               <field name="name" class="mb16"/>
             </h1>
           </div>
-          <field name="tags_id" widget="many2many_tags"/>
+          <field name="tags_id" widget="many2many_tags" options="{'color_field': 'color'}"/>
           <group>
             <group name="left_main_group">
-              <field name="property_type_id"/>
+              <field name="property_type_id" options="{'no_create': True}"/>
               <field name="postcode"/>
               <field name="date_availability" string="Available From"/>
             </group>
@@ -67,14 +69,14 @@
                 <field name="facades"/>
                 <field name="garage"/>
                 <field name="garden"/>
-                <field name="garden_area" string="Garden Area (sqm)"/>
-                <field name="garden_orientation"/>
+                <field name="garden_area" attrs="{'invisible': [('garden', '=', False)]}" string="Garden Area (sqm)"/>
+                <field name="garden_orientation" attrs="{'invisible': [('garden', '=', False)]}"/>
                 <field name="total_area"/>
                 <field name="active"/>
               </group>
             </page>
             <page string="Offers">
-              <field name="offer_ids" widget="one2many_tags"/>
+              <field name="offer_ids" attrs="{'readonly': ['&amp;', ('state', '!=', 'new'), ('state', '!=', 'offer_received')]}" widget="one2many_tags"/>
             </page>
             <page string="Other Info">
               <group>
@@ -93,15 +95,16 @@
     <field name="name">estate.property.view.tree</field>
     <field name="model">estate.property</field>
     <field name="arch" type="xml">
-      <tree string="Channel">
+      <tree string="Channel" decoration-muted="state == 'sold'" decoration-bf="state == 'offer_accepted'" decoration-success="state == 'offer_received' or state == 'offer_accepted'">
         <field name="name"/>
         <field name="state"/>
+        <field name="tags_id" widget="many2many_tags"/>
         <field name="postcode"/>
         <field name="bedrooms"/>
         <field name="living_area"/>
         <field name="expected_price"/>
         <field name="selling_price"/>
-        <field name="date_availability" string="Available From"/>
+        <field name="date_availability" optional="hide" string="Available From"/>
       </tree>
     </field>
   </record>
