@@ -76,7 +76,7 @@
               </group>
             </page>
             <page string="Offers">
-              <field name="offer_ids" attrs="{'readonly': ['&amp;', ('state', '!=', 'new'), ('state', '!=', 'offer_received')]}" widget="one2many_tags"/>
+              <field name="offer_ids" attrs="{'readonly': ['&amp;', ('state', '!=', 'new'), ('state', '!=', 'offer_received')]}"/>
             </page>
             <page string="Other Info">
               <group>

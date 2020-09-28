@@ -7,6 +7,22 @@ class EstateModel(models.Model):
     _description = "Estate property"
     _order = "id desc"
 
+    def action_sold(self):
+        for record in self:
+            if record.state != "canceled":
+                record.state = 'sold'
+            else:
+                raise ValidationError(_('Canceled properties cannot be sold'))
+        return True
+
+    def action_cancel(self):
+        for record in self:
+            if record.state != 'sold':
+                record.state = 'canceled'
+            else:
+                raise ValidationError(_('Solded properties cannot be cancel'))
+        return True
+
     name = fields.Char(required=True)
     description = fields.Text()
     postcode = fields.Char()
@@ -40,11 +56,6 @@ class EstateModel(models.Model):
     total_area = fields.Float(compute="_compute_total_area")
     best_price = fields.Float(compute="_compute_best_price")
 
-    @api.depends("garden_area", "living_area")
-    def _compute_total_area(self):
-        for record in self:
-            record.total_area = record.garden_area + record.living_area
-
     @api.depends("offer_ids.price")
     def _compute_best_price(self):
         max = 0.0
@@ -56,21 +67,12 @@ class EstateModel(models.Model):
             # r.state = "offer_received" if max > 0.0 and r.state == "new" else r.state
         return True
 
-    def action_sold(self):
-        for record in self:
-            if record.state != "canceled":
-                record.state = 'sold'
-            else:
-                raise ValidationError(_('Canceled properties cannot be sold'))
-        return True
-
-    def action_cancel(self):
-        for record in self:
-            if record.state != 'sold':
-                record.state = 'canceled'
-            else:
-                raise ValidationError(_('Solded properties cannot be cancel'))
-        return True
+    def unlink(self):
+        if(self.state in {'new', 'canceled'}):
+            return super(EstateModel, self).unlink()
+        else:
+            raise UserError(_('Deleting of property with this state is not allowed.'))
+        return
 
     @api.onchange("garden")
     def _onchange_garden(self):
@@ -85,12 +87,10 @@ class EstateModel(models.Model):
             if not float_is_zero(record.selling_price, precision_digits=2) and is_less_than_90:
                 raise ValidationError("c pa superieur a 90% dsl")
 
-    def unlink(self):
-        if(self.state in {'new', 'canceled'}):
-            return super(EstateModel, self).unlink()
-        else:
-            raise UserError(_('Deleting of property with this state is not allowed.'))
-        return
+    @api.depends("garden_area", "living_area")
+    def _compute_total_area(self):
+        for record in self:
+            record.total_area = record.garden_area + record.living_area
 
     _sql_constraints = [
         ('check_expected_price', 'CHECK(expected_price > 0)', 'A property expected price must be strictly positive.'),
